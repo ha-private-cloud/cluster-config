@@ -1,0 +1,34 @@
+persistence:
+  enabled: true
+  storageSize: ${storage_size}
+  # No storageClass set: nfs-csi is the cluster's only/default StorageClass
+  # (see csi-driver-nfs.tf), so the default provisioner is used.
+
+nexus:
+  resources:
+    requests:
+      cpu: "3"
+      memory: 2Gi
+    limits:
+      cpu: "3"
+      memory: 3Gi
+
+  docker:
+    enabled: true
+    registries:
+      - host: ${docker_hostname}
+        port: ${docker_port}
+        # Same "accept self-signed" pattern as everywhere else in this
+        # cluster (see headlamp.tf/values): this secret is never created,
+        # so ingress-nginx falls back to its default self-signed cert for
+        # this host instead of failing the Ingress.
+        secretName: nexus-docker-tls
+
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  hostRepo: ${hostname}
+  tls:
+    - hosts:
+        - ${hostname}
+      secretName: nexus-ui-tls
