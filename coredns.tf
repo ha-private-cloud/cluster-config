@@ -1,6 +1,8 @@
-# *.talos.lab only resolves via workstations' /etc/hosts, but Headlamp's
-# pod needs to resolve auth.talos.lab in-cluster for OIDC discovery. This
-# patches in static entries pointing at ingress-nginx's ClusterIP.
+# *.talos.lab only resolves via workstations' /etc/hosts, but some pods need
+# to resolve these hostnames in-cluster too: Headlamp needs auth.talos.lab for
+# OIDC discovery, and build pods (cluster-ci's Kaniko jobs) need
+# registry.talos.lab to push images. This patches in static entries pointing
+# at ingress-nginx's ClusterIP.
 data "kubernetes_service" "ingress_nginx_controller" {
   metadata {
     name      = "ingress-nginx-controller"
@@ -31,6 +33,7 @@ resource "kubernetes_config_map_v1_data" "coredns_hosts" {
           hosts {
               ${data.kubernetes_service.ingress_nginx_controller.spec[0].cluster_ip} ${var.authentik_hostname}
               ${data.kubernetes_service.ingress_nginx_controller.spec[0].cluster_ip} ${var.headlamp_hostname}
+              ${data.kubernetes_service.ingress_nginx_controller.spec[0].cluster_ip} ${var.nexus_docker_hostname}
               fallthrough
           }
 

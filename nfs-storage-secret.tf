@@ -14,13 +14,15 @@ resource "kubernetes_namespace" "infra" {
 }
 
 resource "kubernetes_secret" "nfs_storage_credentials" {
+  for_each = data.terraform_remote_state.proxmox_tofu.outputs.nfs_console_password
+
   metadata {
-    name      = "nfs-storage-credentials"
+    name      = "nfs-storage-credentials-${each.key}"
     namespace = kubernetes_namespace.infra.metadata[0].name
   }
 
   data = {
     username = data.terraform_remote_state.proxmox_tofu.outputs.nfs_admin_username
-    password = data.terraform_remote_state.proxmox_tofu.outputs.nfs_console_password
+    password = each.value
   }
 }

@@ -7,11 +7,13 @@ Kubernetes config for the Talos cluster provisioned in
   on the two worker nodes (no LoadBalancer on bare metal, so it binds
   80/443 directly on the hosts).
 - **Headlamp** — Kubernetes web UI, exposed through ingress-nginx.
-- **csi-driver-nfs** — default StorageClass (`nfs-csi`) backed by the NFS
-  VM from `../proxmox-tofu`. Reclaim policy `Retain`.
-- An `infra` namespace with an `nfs-storage-credentials` Secret, mirroring
-  the NFS VM's console login from `proxmox-tofu`'s state so it's reachable
-  via `kubectl` instead of `tofu output` in another repo.
+- **csi-driver-nfs** — two independent (not replicated) StorageClasses, one
+  per NFS VM from `../proxmox-tofu`: `nfs-csi` (default) and `nfs-csi-pve3`.
+  Reclaim policy `Retain`.
+- An `infra` namespace with an `nfs-storage-credentials-<vm-name>` Secret
+  per NFS VM, mirroring each one's console login from `proxmox-tofu`'s
+  state so it's reachable via `kubectl` instead of `tofu output` in
+  another repo.
 - **Nexus Repository Manager** (`nexus.tf`) — the cluster's container
   registry. App repos push images here; their own Tofu then deploys
   pointing at whatever tag it just pushed. Exposed through ingress-nginx:

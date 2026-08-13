@@ -1,16 +1,3 @@
 storageClass:
-  create: true
-  name: nfs-csi
-  annotations:
-    storageclass.kubernetes.io/is-default-class: "true"
-  parameters:
-    server: ${nfs_server_address}
-    share: ${nfs_export_path}
-    # Each PVC gets its own subdirectory under the export, so unrelated
-    # workloads sharing this one NFS export don't collide.
-    subDir: "$${pvc.metadata.namespace}-$${pvc.metadata.name}"
-    mountPermissions: "0770"
-  reclaimPolicy: Retain
-  volumeBindingMode: Immediate
-  mountOptions:
-    - nfsvers=4.1
+  # StorageClasses are created separately in csi-driver-nfs.tf, one per NFS server.
+  create: false

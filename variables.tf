@@ -46,16 +46,25 @@ variable "csi_driver_nfs_chart_version" {
   default     = "v4.9.0"
 }
 
-variable "nfs_server_address" {
-  description = "IP/hostname of the nfs-storage VM provisioned in proxmox-tofu."
-  type        = string
-  default     = "192.168.0.28"
-}
-
-variable "nfs_export_path" {
-  description = "Path exported by the nfs-storage VM (see proxmox-tofu/scripts/setup-nfs-server.sh)."
-  type        = string
-  default     = "/srv/nfs/data"
+variable "nfs_servers" {
+  description = "NFS servers provisioned in proxmox-tofu, each backing its own StorageClass (keyed by StorageClass name). Exactly one must be marked default."
+  type = map(object({
+    address     = string
+    export_path = string
+    default     = bool
+  }))
+  default = {
+    "nfs-csi" = {
+      address     = "192.168.0.148" # nfs-storage-pve2
+      export_path = "/srv/nfs/data"
+      default     = true
+    }
+    "nfs-csi-pve3" = {
+      address     = "192.168.0.215" # nfs-storage-pve3
+      export_path = "/srv/nfs/data"
+      default     = false
+    }
+  }
 }
 
 variable "authentik_hostname" {
@@ -83,7 +92,7 @@ variable "nexus_hostname" {
 }
 
 variable "nexus_docker_hostname" {
-  description = "Hostname for Nexus's docker-hosted repo connector, used as the image registry host by every app's Helm chart (e.g. kubestore-ui's image.repository)."
+  description = "Hostname for Nexus's docker-hosted repo connector, used as the image registry host by every app's Helm chart (e.g. clusterkeep-ui's image.repository)."
   type        = string
   default     = "registry.talos.lab"
 }
@@ -98,4 +107,37 @@ variable "nexus_storage_size" {
   description = "Size of the PVC (backed by the nfs-csi default StorageClass) Nexus stores blobs/metadata on."
   type        = string
   default     = "20Gi"
+}
+
+variable "cloudflare_tunnel_chart_version" {
+  description = "Version of the cloudflare/cloudflare-tunnel Helm chart to install."
+  type        = string
+  default     = "0.3.2"
+}
+
+variable "cloudflare_account_id" {
+  description = "Cloudflare account ID, from the right sidebar of any domain's Overview page in the dashboard."
+  type        = string
+}
+
+variable "cloudflare_tunnel_name" {
+  description = "Name given to the tunnel via `cloudflared tunnel create <name>`."
+  type        = string
+  default     = "clusterkeep"
+}
+
+variable "cloudflare_tunnel_id" {
+  description = "Tunnel ID printed by `cloudflared tunnel create` (also the filename, minus .json, under ~/.cloudflared)."
+  type        = string
+}
+
+variable "cloudflare_tunnel_credentials_path" {
+  description = "Path to the credentials JSON file written by `cloudflared tunnel create`, e.g. ~/.cloudflared/<tunnel-id>.json. Never committed — only referenced from here."
+  type        = string
+}
+
+variable "cloudflare_tunnel_hostname" {
+  description = "Public hostname routed through the tunnel to clusterkeep-ui."
+  type        = string
+  default     = "login.clusterkeep.com"
 }

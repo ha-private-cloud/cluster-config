@@ -5,13 +5,30 @@ persistence:
   # (see csi-driver-nfs.tf), so the default provisioner is used.
 
 nexus:
+  # Sized to fit this homelab's 4 vCPU/4GB worker VMs without starving
+  # other pods on the same node.
   resources:
     requests:
-      cpu: "3"
-      memory: 2Gi
+      cpu: "1"
+      memory: 1Gi
     limits:
-      cpu: "3"
-      memory: 3Gi
+      cpu: "2"
+      memory: 2Gi
+
+  # Nexus's JVM takes several minutes to finish first-boot startup on this
+  # hardware, so give the probes enough time to avoid killing it mid-init.
+  livenessProbe:
+    initialDelaySeconds: 60
+    periodSeconds: 15
+    failureThreshold: 40
+    timeoutSeconds: 10
+    path: /
+  readinessProbe:
+    initialDelaySeconds: 60
+    periodSeconds: 15
+    failureThreshold: 40
+    timeoutSeconds: 10
+    path: /
 
   docker:
     enabled: true
