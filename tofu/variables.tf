@@ -50,7 +50,7 @@ variable "nfs_servers" {
   description = <<-EOT
     NFS servers provisioned in proxmox-tofu, each backing its own StorageClass (keyed by StorageClass name). Exactly one must be marked default.
 
-    DO NOT `tofu apply` the 10.10.10.x addresses below until the cluster-network VLAN migration's cutover phase is actually complete (VMs re-IP'd, ../../cluster-network/scripts/setup-nfs-server.sh re-run with the new EXPORT_SUBNET) , applying this early points the StorageClass at IPs nothing is listening on yet, and existing NFS mounts break in the meantime. See ../../cluster-network/README.md.
+    DO NOT `tofu apply` the 10.10.10.x addresses below until the cluster-network VLAN migration's cutover phase is actually complete (VMs re-IP'd, setup-nfs-server.sh re-run with the new EXPORT_SUBNET) , applying this early points the StorageClass at IPs nothing is listening on yet, and existing NFS mounts break in the meantime.
   EOT
   type = map(object({
     address     = string
