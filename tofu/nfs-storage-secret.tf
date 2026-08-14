@@ -3,7 +3,7 @@ data "terraform_remote_state" "proxmox_tofu" {
   backend = "local"
 
   config = {
-    path = "${path.module}/../proxmox-tofu/terraform.tfstate"
+    path = "${path.module}/../../proxmox-tofu/tofu/terraform.tfstate"
   }
 }
 

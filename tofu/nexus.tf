@@ -12,7 +12,7 @@ resource "helm_release" "nexus" {
   namespace  = kubernetes_namespace.nexus.metadata[0].name
 
   values = [
-    templatefile("${path.module}/values/nexus.yaml.tftpl", {
+    templatefile("${path.module}/../values/nexus.yaml.tftpl", {
       hostname        = var.nexus_hostname
       docker_hostname = var.nexus_docker_hostname
       docker_port     = var.nexus_docker_port

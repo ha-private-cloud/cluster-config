@@ -3,7 +3,7 @@ data "terraform_remote_state" "cluster_auth" {
   backend = "local"
 
   config = {
-    path = "${path.module}/../cluster-auth/terraform.tfstate"
+    path = "${path.module}/../../cluster-auth/tofu/terraform.tfstate"
   }
 }
 
@@ -22,7 +22,7 @@ resource "helm_release" "headlamp" {
   namespace  = kubernetes_namespace.headlamp.metadata[0].name
 
   values = [
-    templatefile("${path.module}/values/headlamp.yaml.tftpl", {
+    templatefile("${path.module}/../values/headlamp.yaml.tftpl", {
       hostname           = var.headlamp_hostname
       oidc_client_id     = data.terraform_remote_state.cluster_auth.outputs.headlamp_oidc_client_id
       oidc_client_secret = data.terraform_remote_state.cluster_auth.outputs.headlamp_oidc_client_secret

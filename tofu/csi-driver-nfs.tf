@@ -16,7 +16,7 @@ resource "helm_release" "csi_driver_nfs" {
   namespace  = kubernetes_namespace.csi_driver_nfs.metadata[0].name
 
   values = [
-    file("${path.module}/values/csi-driver-nfs.yaml.tftpl")
+    file("${path.module}/../values/csi-driver-nfs.yaml.tftpl")
   ]
 }
 

@@ -10,7 +10,7 @@ output "headlamp_token_command" {
 
 output "etc_hosts_note" {
   description = "Reminder to map the hostname to a worker node IP."
-  value       = "Add to /etc/hosts: '<worker-node-ip> ${var.headlamp_hostname}' (e.g. one of the Talos worker IPs — ingress-nginx runs as a DaemonSet with hostNetwork on the worker nodes)."
+  value       = "Add to /etc/hosts: '<worker-node-ip> ${var.headlamp_hostname}' (e.g. one of the Talos worker IPs , ingress-nginx runs as a DaemonSet with hostNetwork on the worker nodes)."
 }
 
 output "nexus_url" {
@@ -21,6 +21,17 @@ output "nexus_url" {
 output "nexus_admin_password_command" {
   description = "Command to read Nexus's generated initial admin password (valid until changed on first login)."
   value       = "kubectl exec -n ${kubernetes_namespace.nexus.metadata[0].name} deploy/nexus -- cat /nexus-data/admin.password"
+}
+
+output "clusterkeep_ui_registry_username" {
+  description = "Nexus pull credentials for clusterkeep-ui , read by that repo's Tofu via terraform_remote_state to query the registry for the latest tag on each apply."
+  value       = var.clusterkeep_ui_registry_username
+}
+
+output "clusterkeep_ui_registry_password" {
+  description = "See clusterkeep_ui_registry_username."
+  value       = var.clusterkeep_ui_registry_password
+  sensitive   = true
 }
 
 output "nexus_docker_registry" {

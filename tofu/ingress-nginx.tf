@@ -15,5 +15,5 @@ resource "helm_release" "ingress_nginx" {
   version    = var.ingress_nginx_chart_version
   namespace  = kubernetes_namespace.ingress_nginx.metadata[0].name
 
-  values = [file("${path.module}/values/ingress-nginx.yaml")]
+  values = [file("${path.module}/../values/ingress-nginx.yaml")]
 }
