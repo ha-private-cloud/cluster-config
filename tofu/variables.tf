@@ -31,7 +31,7 @@ variable "headlamp_chart_version" {
 variable "headlamp_hostname" {
   description = "Hostname the Headlamp UI will be served on via Ingress. Add this to your workstation's /etc/hosts pointing at a worker node IP (no in-cluster LoadBalancer/DNS is set up)."
   type        = string
-  default     = "headlamp.talos.lab"
+  default     = "headlamp.clusterkeep.dev.net"
 }
 
 variable "csi_driver_nfs_namespace" {
@@ -74,7 +74,7 @@ variable "nfs_servers" {
 variable "authentik_hostname" {
   description = "Authentik's Ingress hostname, as configured in cluster-auth (needed here so CoreDNS can resolve it in-cluster too , see coredns.tf)."
   type        = string
-  default     = "auth.talos.lab"
+  default     = "auth.clusterkeep.dev.net"
 }
 
 variable "nexus_namespace" {
@@ -92,13 +92,13 @@ variable "nexus_chart_version" {
 variable "nexus_hostname" {
   description = "Hostname the Nexus web UI will be served on via Ingress."
   type        = string
-  default     = "nexus.talos.lab"
+  default     = "nexus.clusterkeep.dev.net"
 }
 
 variable "nexus_docker_hostname" {
   description = "Hostname for Nexus's docker-hosted repo connector, used as the image registry host by every app's Helm chart (e.g. clusterkeep-ui's image.repository)."
   type        = string
-  default     = "registry.talos.lab"
+  default     = "registry.clusterkeep.dev.net"
 }
 
 variable "nexus_docker_port" {
