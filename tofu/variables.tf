@@ -47,11 +47,7 @@ variable "csi_driver_nfs_chart_version" {
 }
 
 variable "nfs_servers" {
-  description = <<-EOT
-    NFS servers provisioned in proxmox-tofu, each backing its own StorageClass (keyed by StorageClass name). Exactly one must be marked default.
-
-    These must match the live NFS VMs' addresses. Changing one repoints its StorageClass at an address nothing is serving yet and breaks existing mounts in the meantime, so re-run setup-nfs-server.sh with a matching EXPORT_SUBNET before applying a change here.
-  EOT
+  description = "NFS servers provisioned in proxmox-tofu, each backing its own StorageClass (keyed by StorageClass name). Exactly one must be marked default. Addresses must match the live VMs."
   type = map(object({
     address     = string
     export_path = string
