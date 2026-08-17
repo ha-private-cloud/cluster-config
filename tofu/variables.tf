@@ -50,7 +50,7 @@ variable "nfs_servers" {
   description = <<-EOT
     NFS servers provisioned in proxmox-tofu, each backing its own StorageClass (keyed by StorageClass name). Exactly one must be marked default.
 
-    DO NOT `tofu apply` the 10.10.10.x addresses below until the cluster-network VLAN migration's cutover phase is actually complete (VMs re-IP'd, setup-nfs-server.sh re-run with the new EXPORT_SUBNET) , applying this early points the StorageClass at IPs nothing is listening on yet, and existing NFS mounts break in the meantime.
+    These must match the live NFS VMs' addresses. Changing one repoints its StorageClass at an address nothing is serving yet and breaks existing mounts in the meantime, so re-run setup-nfs-server.sh with a matching EXPORT_SUBNET before applying a change here.
   EOT
   type = map(object({
     address     = string
@@ -59,12 +59,12 @@ variable "nfs_servers" {
   }))
   default = {
     "nfs-csi" = {
-      address     = "10.10.10.24" # nfs-storage-pve2 , was 192.168.0.148 before the cluster-network VLAN migration
+      address     = "192.168.0.148" # nfs-storage-pve2
       export_path = "/srv/nfs/data"
       default     = true
     }
     "nfs-csi-pve3" = {
-      address     = "10.10.10.34" # nfs-storage-pve3 , was 192.168.0.215 before the cluster-network VLAN migration
+      address     = "192.168.0.215" # nfs-storage-pve3
       export_path = "/srv/nfs/data"
       default     = false
     }
@@ -167,4 +167,10 @@ variable "cloudflare_tunnel_hostname" {
   description = "Public hostname routed through the tunnel to clusterkeep-ui."
   type        = string
   default     = "clusterkeep.com"
+}
+
+variable "ingress_tls_secret_name" {
+  description = "Shared TLS secret (wildcard cert from the ClusterKeep internal CA) used by every ingress here."
+  type        = string
+  default     = "clusterkeep-tls"
 }

@@ -35,8 +35,7 @@ ingress:
       paths:
         - path: /
           type: ImplementationSpecific
-  # No secretName: ingress-nginx falls back to its self-signed default
-  # certificate for this host, so the browser will show a cert warning.
   tls:
     - hosts:
         - ${hostname}
+      secretName: ${ingress_tls_secret_name}

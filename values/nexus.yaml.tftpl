@@ -39,7 +39,7 @@ nexus:
         # cluster (see headlamp.tf/values): this secret is never created,
         # so ingress-nginx falls back to its default self-signed cert for
         # this host instead of failing the Ingress.
-        secretName: nexus-docker-tls
+        secretName: ${ingress_tls_secret_name}
 
 ingress:
   enabled: true
@@ -48,4 +48,4 @@ ingress:
   tls:
     - hosts:
         - ${hostname}
-      secretName: nexus-ui-tls
+      secretName: ${ingress_tls_secret_name}

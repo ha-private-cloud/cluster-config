@@ -23,10 +23,11 @@ resource "helm_release" "headlamp" {
 
   values = [
     templatefile("${path.module}/../values/headlamp.yaml.tftpl", {
-      hostname           = var.headlamp_hostname
-      oidc_client_id     = data.terraform_remote_state.cluster_auth.outputs.headlamp_oidc_client_id
-      oidc_client_secret = data.terraform_remote_state.cluster_auth.outputs.headlamp_oidc_client_secret
-      oidc_issuer_url    = data.terraform_remote_state.cluster_auth.outputs.headlamp_oidc_issuer_url
+      hostname                = var.headlamp_hostname
+      ingress_tls_secret_name = var.ingress_tls_secret_name
+      oidc_client_id          = data.terraform_remote_state.cluster_auth.outputs.headlamp_oidc_client_id
+      oidc_client_secret      = data.terraform_remote_state.cluster_auth.outputs.headlamp_oidc_client_secret
+      oidc_issuer_url         = data.terraform_remote_state.cluster_auth.outputs.headlamp_oidc_issuer_url
     })
   ]
 }
