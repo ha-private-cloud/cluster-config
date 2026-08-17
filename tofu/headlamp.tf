@@ -26,8 +26,14 @@ resource "helm_release" "headlamp" {
       hostname                = var.headlamp_hostname
       ingress_tls_secret_name = var.ingress_tls_secret_name
       oidc_client_id          = data.terraform_remote_state.cluster_auth.outputs.headlamp_oidc_client_id
-      oidc_client_secret      = data.terraform_remote_state.cluster_auth.outputs.headlamp_oidc_client_secret
       oidc_issuer_url         = data.terraform_remote_state.cluster_auth.outputs.headlamp_oidc_issuer_url
     })
   ]
+
+  # Kept out of `values` , helm_release.values is not a sensitive attribute and
+  # renders in full in plan output.
+  set_sensitive {
+    name  = "config.oidc.clientSecret"
+    value = data.terraform_remote_state.cluster_auth.outputs.headlamp_oidc_client_secret
+  }
 }
