@@ -3,25 +3,9 @@ config:
     clientID: "${oidc_client_id}"
     issuerURL: "${oidc_issuer_url}"
 
-# Headlamp forwards each logged-in user's own OIDC token to the K8s API by
-# default (config.unsafeUseServiceAccountToken, which would collapse every
-# user onto the pod's SA, is opt-in and left unset) , so now that the
-# apiserver trusts Authentik as an OIDC issuer (see
-# proxmox-tofu/talos-oidc-patch.yaml) and cluster-rbac grants per-user
-# ClusterRoles, the chart's default cluster-admin ClusterRoleBinding for
-# the "headlamp" ServiceAccount is a standing admin credential nothing
-# actually needs (`kubectl create token headlamp` would still mint a
-# cluster-admin token otherwise). serviceAccount.create stays at its
-# default (true) , the pod still needs an identity to run as, it just
-# doesn't need cluster-admin bound to it.
 clusterRoleBinding:
   create: false
 
-# Authentik sits behind ingress-nginx's self-signed default certificate
-# (issued for "ingress.local", not auth.talos.lab) , same "accept
-# self-signed" pattern used everywhere else in this cluster, so Headlamp's
-# backend needs to skip verification for its server-to-server OIDC
-# discovery/token calls too.
 env:
   - name: HEADLAMP_CONFIG_OIDC_SKIP_TLS_VERIFY
     value: "true"

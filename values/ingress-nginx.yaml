@@ -1,6 +1,3 @@
-# Bare-metal Talos cluster has no cloud LoadBalancer and no MetalLB installed,
-# so the controller binds directly to ports 80/443 on the worker node hosts.
-# Control-plane node keeps its default NoSchedule taint
 controller:
   kind: DaemonSet
   hostNetwork: true

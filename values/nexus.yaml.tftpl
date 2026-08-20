@@ -1,12 +1,8 @@
 persistence:
   enabled: true
   storageSize: ${storage_size}
-  # No storageClass set: nfs-csi is the cluster's only/default StorageClass
-  # (see csi-driver-nfs.tf), so the default provisioner is used.
 
 nexus:
-  # Sized to fit this homelab's 4 vCPU/4GB worker VMs without starving
-  # other pods on the same node.
   resources:
     requests:
       cpu: "1"
@@ -14,9 +10,6 @@ nexus:
     limits:
       cpu: "2"
       memory: 2Gi
-
-  # Nexus's JVM takes several minutes to finish first-boot startup on this
-  # hardware, so give the probes enough time to avoid killing it mid-init.
   livenessProbe:
     initialDelaySeconds: 60
     periodSeconds: 15
@@ -35,10 +28,6 @@ nexus:
     registries:
       - host: ${docker_hostname}
         port: ${docker_port}
-        # Same "accept self-signed" pattern as everywhere else in this
-        # cluster (see headlamp.tf/values): this secret is never created,
-        # so ingress-nginx falls back to its default self-signed cert for
-        # this host instead of failing the Ingress.
         secretName: ${ingress_tls_secret_name}
 
 ingress:
