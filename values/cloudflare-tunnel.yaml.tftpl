@@ -3,9 +3,3 @@ cloudflare:
   tunnelName: "${tunnel_name}"
   tunnelId: "${tunnel_id}"
   secretName: "${secret_name}"
-  # Routes straight to clusterkeep-ui's ClusterIP Service, bypassing
-  # ingress-nginx's self-signed default cert entirely. Chart appends its own
-  # http_status:404 catch-all rule after this, so no need to add one here.
-  ingress:
-    - hostname: ${hostname}
-      service: http://clusterkeep-ui.clusterkeep-prd-pub.svc.cluster.local:80

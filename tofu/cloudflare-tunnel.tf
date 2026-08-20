@@ -1,12 +1,47 @@
-# Runs cloudflared in-cluster to expose clusterkeep-ui at
-# login.clusterkeep.com via a Cloudflare Tunnel , no port forwarding, no
-# public IP needed. Tunnel itself (ID + credentials.json) is created
-# out-of-band via `cloudflared tunnel create` (see README); this just runs
-# the connector and wires its ingress rule to clusterkeep-ui's Service.
-# Reuses the "infra" namespace from nfs-storage-secret.tf.
-#
-# Headlamp is deliberately NOT routed through this tunnel , LAN-only
-# access via headlamp.talos.lab, see cluster_config_addons.md.
+resource "random_bytes" "cloudflare_tunnel_secret" {
+  length = 32
+}
+
+resource "cloudflare_zero_trust_tunnel_cloudflared" "clusterkeep" {
+  account_id    = var.cloudflare_account_id
+  name          = var.cloudflare_tunnel_name
+  tunnel_secret = random_bytes.cloudflare_tunnel_secret.base64
+  config_src    = "cloudflare"
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+resource "cloudflare_zero_trust_tunnel_cloudflared_config" "clusterkeep" {
+  account_id = var.cloudflare_account_id
+  tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.clusterkeep.id
+
+  config = {
+    ingress = concat(
+      [for r in var.cloudflare_tunnel_ingress : {
+        hostname = r.hostname
+        service  = "http://${r.service}.${r.namespace}.svc.cluster.local:${r.port}"
+      }],
+      [{ service = "http_status:404" }]
+    )
+  }
+}
+
+resource "cloudflare_dns_record" "tunnel" {
+  for_each = { for r in var.cloudflare_tunnel_ingress : r.hostname => r }
+
+  zone_id = var.cloudflare_zone_id
+  name    = each.key
+  type    = "CNAME"
+  content = "${cloudflare_zero_trust_tunnel_cloudflared.clusterkeep.id}.cfargotunnel.com"
+  proxied = true
+  ttl     = 1
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
 
 resource "kubernetes_secret" "cloudflare_tunnel_credentials" {
   metadata {
@@ -15,7 +50,11 @@ resource "kubernetes_secret" "cloudflare_tunnel_credentials" {
   }
 
   data = {
-    "credentials.json" = file(var.cloudflare_tunnel_credentials_path)
+    "credentials.json" = jsonencode({
+      AccountTag   = var.cloudflare_account_id
+      TunnelID     = cloudflare_zero_trust_tunnel_cloudflared.clusterkeep.id
+      TunnelSecret = random_bytes.cloudflare_tunnel_secret.base64
+    })
   }
 }
 
@@ -29,10 +68,11 @@ resource "helm_release" "cloudflare_tunnel" {
   values = [
     templatefile("${path.module}/../values/cloudflare-tunnel.yaml.tftpl", {
       account_id  = var.cloudflare_account_id
-      tunnel_name = var.cloudflare_tunnel_name
-      tunnel_id   = var.cloudflare_tunnel_id
+      tunnel_name = cloudflare_zero_trust_tunnel_cloudflared.clusterkeep.name
+      tunnel_id   = cloudflare_zero_trust_tunnel_cloudflared.clusterkeep.id
       secret_name = kubernetes_secret.cloudflare_tunnel_credentials.metadata[0].name
-      hostname    = var.cloudflare_tunnel_hostname
     })
   ]
+
+  depends_on = [cloudflare_zero_trust_tunnel_cloudflared_config.clusterkeep]
 }

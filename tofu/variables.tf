@@ -138,31 +138,53 @@ variable "cloudflare_tunnel_chart_version" {
   default     = "0.3.2"
 }
 
+variable "cloudflare_api_token" {
+  description = "Cloudflare API token with Zero Trust (Cloudflare Tunnel) edit and DNS edit permissions."
+  type        = string
+  sensitive   = true
+}
+
+variable "cloudflare_zone_id" {
+  description = "Cloudflare zone ID for the domain the tunnel hostname belongs to."
+  type        = string
+}
+
 variable "cloudflare_account_id" {
   description = "Cloudflare account ID, from the right sidebar of any domain's Overview page in the dashboard."
   type        = string
 }
 
 variable "cloudflare_tunnel_name" {
-  description = "Name given to the tunnel via `cloudflared tunnel create <name>`."
+  description = "Name of the Cloudflare Tunnel, created and managed here."
   type        = string
   default     = "clusterkeep"
 }
 
-variable "cloudflare_tunnel_id" {
-  description = "Tunnel ID printed by `cloudflared tunnel create` (also the filename, minus .json, under ~/.cloudflared)."
-  type        = string
-}
-
-variable "cloudflare_tunnel_credentials_path" {
-  description = "Path to the credentials JSON file written by `cloudflared tunnel create`, e.g. ~/.cloudflared/<tunnel-id>.json. Never committed , only referenced from here."
-  type        = string
-}
-
 variable "cloudflare_tunnel_hostname" {
-  description = "Public hostname routed through the tunnel to clusterkeep-ui."
+  description = "Legacy single-hostname setting; routes are now defined in cloudflare_tunnel_ingress."
   type        = string
   default     = "clusterkeep.com"
+}
+
+variable "cloudflare_tunnel_ingress" {
+  description = "Public hostname to in-cluster service routes exposed through the Cloudflare Tunnel. Namespaces must end in -pub; anything not listed here is unreachable from the internet."
+  type = list(object({
+    hostname  = string
+    namespace = string
+    service   = string
+    port      = number
+  }))
+  default = [{
+    hostname  = "clusterkeep.com"
+    namespace = "clusterkeep-prd-pub"
+    service   = "clusterkeep-ui"
+    port      = 80
+  }]
+
+  validation {
+    condition     = alltrue([for r in var.cloudflare_tunnel_ingress : endswith(r.namespace, "-pub")])
+    error_message = "Only namespaces ending in -pub may be exposed through the Cloudflare Tunnel."
+  }
 }
 
 variable "ingress_tls_secret_name" {
