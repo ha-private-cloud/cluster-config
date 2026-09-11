@@ -134,7 +134,7 @@ variable "auth_api_namespaces" {
   type        = map(string)
   default = {
     default = "clusterkeep-dev-priv"
-    prd     = "clusterkeep-prd-priv"
+    prd     = "auth-prd-pub"
     prv     = "clusterkeep-prv-priv"
   }
 }
@@ -194,12 +194,26 @@ variable "cloudflare_tunnel_ingress" {
     service   = string
     port      = number
   }))
-  default = [{
-    hostname  = "clusterkeep.com"
-    namespace = "clusterkeep-prd-pub"
-    service   = "clusterkeep-ui"
-    port      = 80
-  }]
+  default = [
+    {
+      hostname  = "clusterkeep.com"
+      namespace = "clusterkeep-prd-pub"
+      service   = "clusterkeep-ui"
+      port      = 80
+    },
+    {
+      hostname  = "dashboard.clusterkeep.com"
+      namespace = "storage-prd-pub"
+      service   = "storage-ui"
+      port      = 80
+    },
+    {
+      hostname  = "auth.clusterkeep.com"
+      namespace = "auth-prd-pub"
+      service   = "auth-api"
+      port      = 80
+    },
+  ]
 
   validation {
     condition     = alltrue([for r in var.cloudflare_tunnel_ingress : endswith(r.namespace, "-pub")])
