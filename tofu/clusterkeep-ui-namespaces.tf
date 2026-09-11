@@ -1,8 +1,4 @@
-# Namespaces for clusterkeep-ui's dev/prd/prv environments, created here
-# instead of in that app's own Tofu , a namespace is a cluster-wide
-# primitive, not something an app repo should own the lifecycle of.
-# clusterkeep-ui's Tofu only looks these up (see its clusterkeep-ui.tf), it
-# doesn't create or destroy them.
+# Created here, not in clusterkeep-ui's own Tofu - a namespace is a cluster-wide primitive, not something an app repo should own.
 resource "kubernetes_namespace" "clusterkeep_ui" {
   for_each = var.clusterkeep_ui_namespaces
 
@@ -11,9 +7,7 @@ resource "kubernetes_namespace" "clusterkeep_ui" {
   }
 }
 
-# Nexus pull credentials for clusterkeep-ui's image, one Secret per
-# namespace above. Same reasoning as the namespaces , this is registry
-# auth wiring, not anything specific to the app itself.
+# Nexus pull credentials for clusterkeep-ui, one Secret per namespace - registry wiring, not app-specific.
 resource "kubernetes_secret" "clusterkeep_ui_registry" {
   for_each = var.clusterkeep_ui_registry_username != "" ? var.clusterkeep_ui_namespaces : {}
 

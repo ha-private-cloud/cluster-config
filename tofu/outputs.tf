@@ -10,7 +10,7 @@ output "headlamp_token_command" {
 
 output "etc_hosts_note" {
   description = "Reminder to map the hostname to a worker node IP."
-  value       = "Add to /etc/hosts: '<worker-node-ip> ${var.headlamp_hostname}' (e.g. one of the Talos worker IPs , ingress-nginx runs as a DaemonSet with hostNetwork on the worker nodes)."
+  value       = "Add to /etc/hosts: '<worker-node-ip> ${var.headlamp_hostname}' (any Talos worker IP)."
 }
 
 output "nexus_url" {
@@ -24,7 +24,7 @@ output "nexus_admin_password_command" {
 }
 
 output "clusterkeep_ui_registry_username" {
-  description = "Nexus pull credentials for clusterkeep-ui , read by that repo's Tofu via terraform_remote_state to query the registry for the latest tag on each apply."
+  description = "Nexus pull credentials, read by app repos via terraform_remote_state to query the registry for the latest tag on each apply."
   value       = var.clusterkeep_ui_registry_username
 }
 
@@ -35,6 +35,6 @@ output "clusterkeep_ui_registry_password" {
 }
 
 output "nexus_docker_registry" {
-  description = "Host:port every app's Helm chart should use as image.repository's registry. Requires a \"docker (hosted)\" repository created in the Nexus UI with its HTTP port set to match, and ../proxmox-tofu/talos-registry-patch.yaml applied to every node (see README)."
+  description = "Host:port every app's Helm chart should use as image.repository's registry."
   value       = "${var.nexus_docker_hostname}:${var.nexus_docker_port}"
 }

@@ -68,7 +68,7 @@ variable "nfs_servers" {
 }
 
 variable "authentik_hostname" {
-  description = "Authentik's Ingress hostname, as configured in cluster-auth (needed here so CoreDNS can resolve it in-cluster too , see coredns.tf)."
+  description = "Authentik's Ingress hostname, as configured in cluster-auth."
   type        = string
   default     = "auth.clusterkeep.dev.net"
 }
@@ -98,7 +98,7 @@ variable "nexus_docker_hostname" {
 }
 
 variable "nexus_docker_port" {
-  description = "Port Nexus's docker-hosted repo connector listens on. Must match the HTTP port configured on the \"docker (hosted)\" repository created in the Nexus UI after first install (see README) , the chart only opens the port, it doesn't create the repository."
+  description = "Port Nexus's docker-hosted repo connector listens on. Must match the HTTP port configured on that repository in the Nexus UI."
   type        = number
   default     = 5000
 }
@@ -110,7 +110,7 @@ variable "nexus_storage_size" {
 }
 
 variable "clusterkeep_ui_namespaces" {
-  description = "Namespaces to create for clusterkeep-ui's dev/prd/prv environments (keyed by that repo's tofu workspace name , see ../../clusterkeep-ui/tofu)."
+  description = "Namespaces for clusterkeep-ui's dev/prd/prv environments, keyed by tofu workspace name."
   type        = map(string)
   default = {
     default = "clusterkeep-dev-pub"
@@ -119,8 +119,28 @@ variable "clusterkeep_ui_namespaces" {
   }
 }
 
+variable "storage_ui_namespaces" {
+  description = "Namespaces for storage-ui's dev/prd/prv environments, keyed by tofu workspace name."
+  type        = map(string)
+  default = {
+    default = "storage-dev-pub"
+    prd     = "storage-prd-pub"
+    prv     = "storage-prv-pub"
+  }
+}
+
+variable "auth_api_namespaces" {
+  description = "Namespaces for auth-api's dev/prd/prv environments, keyed by tofu workspace name."
+  type        = map(string)
+  default = {
+    default = "clusterkeep-dev-priv"
+    prd     = "clusterkeep-prd-priv"
+    prv     = "clusterkeep-prv-priv"
+  }
+}
+
 variable "clusterkeep_ui_registry_username" {
-  description = "Username for clusterkeep-ui to pull from the Nexus docker-hosted repo. Leave blank if the repo allows anonymous pulls , no Secret is created in that case."
+  description = "Username for clusterkeep-ui to pull from the Nexus docker-hosted repo. Leave blank if the repo allows anonymous pulls."
   type        = string
   default     = ""
 }
@@ -191,4 +211,23 @@ variable "ingress_tls_secret_name" {
   description = "Shared TLS secret (wildcard cert from the ClusterKeep internal CA) used by every ingress here."
   type        = string
   default     = "clusterkeep-tls"
+}
+
+variable "headlamp_oidc_client_id_override" {
+  description = "Set to switch Headlamp's login from Authentik (cluster-auth) to auth-api. Take the value from auth-api's headlamp_oidc_client_id output. Blank keeps Authentik."
+  type        = string
+  default     = ""
+}
+
+variable "headlamp_oidc_issuer_url_override" {
+  description = "See headlamp_oidc_client_id_override. Take the value from auth-api's headlamp_oidc_issuer_url output. Must match the apiserver's trusted issuer, or Headlamp logs in but every API call 401s."
+  type        = string
+  default     = ""
+}
+
+variable "headlamp_oidc_client_secret_override" {
+  description = "See headlamp_oidc_client_id_override. Take the value from auth-api's headlamp_oidc_client_secret output."
+  type        = string
+  default     = ""
+  sensitive   = true
 }

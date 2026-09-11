@@ -38,8 +38,7 @@ resource "kubernetes_storage_class_v1" "nfs" {
   parameters = {
     server = each.value.address
     share  = each.value.export_path
-    # Each PVC gets its own subdirectory under the export, so unrelated
-    # workloads sharing this one NFS export don't collide.
+    # Each PVC gets its own subdirectory under the export, so unrelated workloads sharing it don't collide.
     subDir           = "$${pvc.metadata.namespace}-$${pvc.metadata.name}"
     mountPermissions = "0770"
   }
