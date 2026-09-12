@@ -129,6 +129,16 @@ variable "storage_ui_namespaces" {
   }
 }
 
+variable "admin_ui_namespaces" {
+  description = "Namespaces for admin-ui's dev/prd/prv environments, keyed by tofu workspace name."
+  type        = map(string)
+  default = {
+    default = "admin-ui-dev-pub"
+    prd     = "admin-ui-prd-pub"
+    prv     = "admin-ui-prv-pub"
+  }
+}
+
 variable "auth_api_namespaces" {
   description = "Namespaces for auth-api's dev/prd/prv environments, keyed by tofu workspace name."
   type        = map(string)
