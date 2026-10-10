@@ -1,4 +1,3 @@
-# Namespaces for storage-ui's dev/prd/prv environments, created here instead of in that app's own Tofu.
 resource "kubernetes_namespace" "storage_ui" {
   for_each = var.storage_ui_namespaces
 

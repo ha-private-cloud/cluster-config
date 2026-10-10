@@ -1,4 +1,3 @@
-# Namespaces for admin-ui's dev/prd/prv environments, created here instead of in that app's own Tofu.
 resource "kubernetes_namespace" "admin_ui" {
   for_each = var.admin_ui_namespaces
 

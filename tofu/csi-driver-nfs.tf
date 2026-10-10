@@ -1,7 +1,6 @@
 resource "kubernetes_namespace" "csi_driver_nfs" {
   metadata {
     name = var.csi_driver_nfs_namespace
-    # Node plugin needs privileged host mounts; same PSA exemption as ingress-nginx.
     labels = {
       "pod-security.kubernetes.io/enforce" = "privileged"
     }
@@ -36,9 +35,8 @@ resource "kubernetes_storage_class_v1" "nfs" {
   mount_options       = ["nfsvers=4.1"]
 
   parameters = {
-    server = each.value.address
-    share  = each.value.export_path
-    # Each PVC gets its own subdirectory under the export, so unrelated workloads sharing it don't collide.
+    server           = each.value.address
+    share            = each.value.export_path
     subDir           = "$${pvc.metadata.namespace}-$${pvc.metadata.name}"
     mountPermissions = "0770"
   }

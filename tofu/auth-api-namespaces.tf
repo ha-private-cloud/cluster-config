@@ -1,4 +1,3 @@
-# Namespaces for auth-api's dev/prd/prv environments, created here instead of in that app's own Tofu.
 resource "kubernetes_namespace" "auth_api" {
   for_each = var.auth_api_namespaces
 

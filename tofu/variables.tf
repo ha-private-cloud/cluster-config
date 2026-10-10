@@ -55,22 +55,16 @@ variable "nfs_servers" {
   }))
   default = {
     "nfs-csi" = {
-      address     = "192.168.0.148" # nfs-storage-pve2
+      address     = "192.168.0.148"
       export_path = "/srv/nfs/data"
       default     = true
     }
     "nfs-csi-pve3" = {
-      address     = "192.168.0.215" # nfs-storage-pve3
+      address     = "192.168.0.215"
       export_path = "/srv/nfs/data"
       default     = false
     }
   }
-}
-
-variable "authentik_hostname" {
-  description = "Authentik's Ingress hostname, as configured in cluster-auth."
-  type        = string
-  default     = "auth.clusterkeep.dev.net"
 }
 
 variable "nexus_namespace" {
@@ -223,6 +217,12 @@ variable "cloudflare_tunnel_ingress" {
       service   = "auth-api"
       port      = 80
     },
+    {
+      hostname  = "admin.clusterkeep.com"
+      namespace = "admin-ui-prd-pub"
+      service   = "admin-ui"
+      port      = 80
+    },
   ]
 
   validation {
@@ -235,23 +235,4 @@ variable "ingress_tls_secret_name" {
   description = "Shared TLS secret (wildcard cert from the ClusterKeep internal CA) used by every ingress here."
   type        = string
   default     = "clusterkeep-tls"
-}
-
-variable "headlamp_oidc_client_id_override" {
-  description = "Set to switch Headlamp's login from Authentik (cluster-auth) to auth-api. Take the value from auth-api's headlamp_oidc_client_id output. Blank keeps Authentik."
-  type        = string
-  default     = ""
-}
-
-variable "headlamp_oidc_issuer_url_override" {
-  description = "See headlamp_oidc_client_id_override. Take the value from auth-api's headlamp_oidc_issuer_url output. Must match the apiserver's trusted issuer, or Headlamp logs in but every API call 401s."
-  type        = string
-  default     = ""
-}
-
-variable "headlamp_oidc_client_secret_override" {
-  description = "See headlamp_oidc_client_id_override. Take the value from auth-api's headlamp_oidc_client_secret output."
-  type        = string
-  default     = ""
-  sensitive   = true
 }

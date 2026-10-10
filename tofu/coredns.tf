@@ -1,4 +1,3 @@
-# *.talos.lab only resolves via workstations' /etc/hosts, so this patches static in-cluster entries for pods that need it too (Headlamp OIDC discovery, Kaniko image pushes).
 data "kubernetes_service" "ingress_nginx_controller" {
   metadata {
     name      = "ingress-nginx-controller"
@@ -27,7 +26,6 @@ resource "kubernetes_config_map_v1_data" "coredns_hosts" {
           }
           prometheus :9153
           hosts {
-              ${data.kubernetes_service.ingress_nginx_controller.spec[0].cluster_ip} ${var.authentik_hostname}
               ${data.kubernetes_service.ingress_nginx_controller.spec[0].cluster_ip} ${var.headlamp_hostname}
               ${data.kubernetes_service.ingress_nginx_controller.spec[0].cluster_ip} ${var.nexus_docker_hostname}
               fallthrough

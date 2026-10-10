@@ -1,4 +1,3 @@
-# Mirrors nfs-storage VM console credentials (from proxmox-tofu) into a Secret, reachable via kubectl.
 data "terraform_remote_state" "proxmox_tofu" {
   backend = "local"
 

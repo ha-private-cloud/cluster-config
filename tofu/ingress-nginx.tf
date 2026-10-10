@@ -1,7 +1,6 @@
 resource "kubernetes_namespace" "ingress_nginx" {
   metadata {
     name = var.ingress_nginx_namespace
-    # Controller needs hostNetwork/hostPort, blocked by Talos's default PSA baseline level.
     labels = {
       "pod-security.kubernetes.io/enforce" = "privileged"
     }

@@ -6,10 +6,6 @@ config:
 clusterRoleBinding:
   create: false
 
-env:
-  - name: HEADLAMP_CONFIG_OIDC_SKIP_TLS_VERIFY
-    value: "true"
-
 ingress:
   enabled: true
   ingressClassName: nginx
