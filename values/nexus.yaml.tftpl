@@ -3,10 +3,20 @@ persistence:
   storageSize: ${storage_size}
 
 nexus:
+  env:
+    - name: INSTALL4J_ADD_VM_PARAMS
+      value: >-
+        -Xms768M -Xmx768M
+        -XX:MaxDirectMemorySize=512M
+        -XX:+UnlockExperimentalVMOptions
+        -XX:+UseCGroupMemoryLimitForHeap
+        -Djava.util.prefs.userRoot=/nexus-data/javaprefs
+    - name: NEXUS_SECURITY_RANDOMPASSWORD
+      value: "true"
   resources:
     requests:
       cpu: "1"
-      memory: 1Gi
+      memory: 1536Mi
     limits:
       cpu: "2"
       memory: 2Gi
