@@ -1,92 +1,69 @@
 # cluster-config
 
-Kubernetes config for the Talos cluster provisioned in [`../proxmox-tofu`](../proxmox-tofu). Installs via OpenTofu:
+The shared services inside the Talos cluster that every ClusterKeep app relies on, installed with OpenTofu. The cluster itself comes from `proxmox-tofu`.
 
-- **ingress-nginx** , ingress controller, runs as a `hostNetwork` DaemonSet on the two worker nodes (no LoadBalancer on bare metal, so it binds 80/443 directly on the hosts).
-- **Headlamp** , Kubernetes web UI, exposed through ingress-nginx.
-- **csi-driver-nfs** , two independent (not replicated) StorageClasses, one per NFS VM from `../proxmox-tofu`: `nfs-csi` (default) and `nfs-csi-pve3`. Reclaim policy `Retain`.
-- An `infra` namespace with an `nfs-storage-credentials-<vm-name>` Secret per NFS VM, mirroring each one's console login from `proxmox-tofu`'s state so it's reachable via `kubectl` instead of `tofu output` in another repo.
-- **Nexus Repository Manager** (`nexus.tf`) , the cluster's container registry. App repos push images here; their own Tofu then deploys pointing at whatever tag it just pushed. Exposed through ingress-nginx: web UI at `nexus_hostname`, docker connector at `nexus_docker_hostname`. The actual "docker (hosted)" repository is a one-time manual step (see below).
-- A CoreDNS patch (`coredns.tf`) adding `hosts` entries for `auth.talos.lab`/`headlamp.talos.lab` → ingress-nginx's ClusterIP, so Headlamp's in-pod OIDC calls to Authentik can resolve `*.talos.lab` (cluster DNS otherwise only knows what's in workstations' `/etc/hosts`).
-- Headlamp's `config.oidc` values, read from `../cluster-auth`'s Tofu state. Also sets `HEADLAMP_CONFIG_OIDC_SKIP_TLS_VERIFY=true`, since Authentik sits behind ingress-nginx's self-signed cert.
-- `clusterkeep-ui-namespaces.tf` , the `clusterkeep-dev-pub`/`clusterkeep-prd-pub`/`clusterkeep-prv-pub` namespaces `../clusterkeep-ui` deploys into, plus its Nexus pull-credentials Secret (only created if `clusterkeep_ui_registry_username` is set). Namespaces are a cluster-wide primitive, so they're created here rather than by that app's own Tofu , `../clusterkeep-ui/tofu` only looks them up by name.
+## What it installs
 
-## Prerequisites
+- **ingress-nginx** as a DaemonSet on the host network of each worker, so it listens on ports 80 and 443 directly. There's no load balancer on bare metal.
+- **csi-driver-nfs** with a StorageClass for each NFS VM: `nfs-csi` on 192.168.0.148, which is the default, and `nfs-csi-pve3` on 192.168.0.215. The volumes use the `Retain` reclaim policy.
+- **Headlamp**, the Kubernetes dashboard, at headlamp.clusterkeep.dev.net. It signs in through auth-api, with its client settings read from `cluster-auth`'s state.
+- **Nexus** as the container registry. The web interface is at nexus.clusterkeep.dev.net and Docker images go to registry.clusterkeep.dev.net. Its Java memory is sized to fit inside the pod's limit.
+- A **CoreDNS** change so pods can reach Headlamp and the registry by their local names through ingress-nginx.
+- The **Cloudflare Tunnel** that makes production public. Only the routes in `cloudflare_tunnel_ingress` are reachable from the internet, and only namespaces ending in `-pub` can be listed:
 
-- `tofu` (OpenTofu)
-- A working kubeconfig from the cluster bootstrap
+  | Hostname | Goes to |
+  |---|---|
+  | clusterkeep.com | clusterkeep-ui |
+  | dashboard.clusterkeep.com | storage-ui |
+  | auth.clusterkeep.com | auth-api |
+  | admin.clusterkeep.com | admin-ui |
 
-## Usage
+- The **namespaces** each app deploys into, because namespaces are shared across the cluster. Each app's own OpenTofu only looks its namespace up.
 
-All `.tf` files live under `tofu/`, not the repo root. Create `tofu/terraform.tfvars`:
-```
-kubeconfig_path   = ""
-headlamp_hostname = "headlamp.talos.lab"
-```
+  | App | Namespaces |
+  |---|---|
+  | clusterkeep-ui | `clusterkeep-dev-pub`, `clusterkeep-prv-pub`, `clusterkeep-prd-pub` |
+  | storage-ui | `storage-dev-pub`, `storage-prv-pub`, `storage-prd-pub` |
+  | admin-ui | `admin-ui-dev-pub`, `admin-ui-prv-pub`, `admin-ui-prd-pub` |
+  | auth-api | `auth-dev-pub`, `auth-prv-pub`, `auth-prd-pub` |
+  | storage-api | `storage-dev-priv`, `storage-prv-priv`, `storage-prd-priv` |
 
-Run tofu:
+- An `infra` namespace holding each NFS VM's console login as a Secret.
+
+## Using it
+
+All the OpenTofu files are in `tofu/`. The tfvars on the CI bastion hold the kubeconfig path and the Cloudflare details.
+
+Pushing a `vX.Y.Z` tag plans the change through the shared `pipelines` workflow. Applying it is always a manual run of that workflow with the tag. To run it by hand from the bastion:
+
 ```sh
-cd tofu
-tofu init
-tofu plan
-tofu apply
+cluster-cli tofu cluster-config plan
+cluster-cli tofu cluster-config apply
 ```
 
-## Accessing Headlamp
+Changing a namespace here deletes the old one and everything in it, so redeploy the apps that used it straight after.
 
-1. Point both hostnames at a worker node IP (ingress-nginx only runs on workers). Add to your browser machine's `/etc/hosts` , separate from the CoreDNS patch above, which only covers in-cluster resolution:
+## Reaching the internal sites
 
-   ```
-   192.168.0.16  headlamp.talos.lab
-   192.168.0.16  auth.talos.lab
-   ```
+Every `*.clusterkeep.dev.net` name is resolved by the dnsmasq server on the CI bastion. From another machine on the network, use the bastion as its DNS server.
 
-   (`auth.talos.lab` is needed too , the SSO button redirects your browser there directly.)
+Headlamp signs in through auth-api. Anyone in the `cluster-admins`, `cluster-editors` or `cluster-viewers` group gets that level of access, and a cluster admin can change someone's group in admin-ui.
 
-2. Browse to `https://headlamp.talos.lab`
+## Setting up Nexus
 
-3. Either:
-   - Click **Sign in with SSO** and log in with an Authentik account (see `../cluster-auth`'s README for bootstrap admin credentials), or
-   - Log in with a token:
+The Helm chart only starts Nexus. These are one-time steps:
 
-     ```sh
-     export KUBECONFIG=kubeconfig
-     kubectl create token headlamp -n headlamp
-     ```
-
-     Paste the token into Headlamp's login screen. It's the chart's default ServiceAccount, bound to `cluster-admin`, and expires after 1 hour (re-run the command for a new one).
-
-## Setting up Nexus as the container registry
-
-The Helm chart only stands Nexus up , the docker-hosted repository and node-level trust for its self-signed cert are one-time manual steps.
-
-1. Add both hostnames to your workstation's `/etc/hosts` (same worker node IP as Headlamp):
-
-   ```
-   192.168.0.16  nexus.talos.lab
-   192.168.0.16  registry.talos.lab
-   ```
-
-2. Get the generated admin password and log in at `https://nexus.talos.lab` as `admin`:
+1. Get the generated admin password and log in to nexus.clusterkeep.dev.net as `admin`:
 
    ```sh
-   kubectl exec -n nexus deploy/nexus -- cat /nexus-data/admin.password
+   kubectl exec -n nexus deploy/nexus-nexus-repository-manager -- cat /nexus-data/admin.password
    ```
 
-3. In **Settings → Repositories → Create repository → docker (hosted)**:
-   - Name: `docker-hosted`
-   - HTTP: enable, port `5000` (must match `nexus_docker_port`)
-   - Enable **Docker Bearer Token Realm** (**Settings → Security → Realms**) , required for `docker login`/`push` auth.
+2. Create a **docker (hosted)** repository called `docker-hosted` with HTTP on port 5000, and turn on the **Docker Bearer Token Realm** under Security, Realms.
+3. Apply `cluster-network/static-ips/patches/_registry2.yaml` to every node so they can resolve and pull from the registry.
 
-4. Every Talos node needs to trust `registry.talos.lab`'s self-signed cert and resolve the hostname , neither is true by default. Apply [`../proxmox-tofu/talos-registry-patch.yaml`](../proxmox-tofu/talos-registry-patch.yaml) (same pattern as `talos-oidc-patch.yaml`, but to *every* node, since each pulls images independently):
+Apps pull images without logging in. cluster-ci has its own push user.
 
-   ```sh
-   cd ../proxmox-tofu
-   talosctl patch mc --patch-file talos-registry-patch.yaml \
-     --nodes <node-ip> \
-     --talosconfig _out/talosconfig
-   ```
+## Known issue
 
-   Repeat per node (`talosctl get members --talosconfig _out/talosconfig` lists them). This changes live cluster nodes , review the patch file first.
-
-5. Build/tag/push to `registry.talos.lab` (no port , this goes through ingress-nginx on the standard HTTPS port) through the same self-signed cert. Docker/Podman need to either trust it or be told the registry is insecure
+The NFS StorageClasses name each volume's folder after its namespace and claim. A deleted claim's data stays on the NFS server, and a new claim with the same name in the same namespace picks it back up. Clear out the old folder before recreating a claim.
