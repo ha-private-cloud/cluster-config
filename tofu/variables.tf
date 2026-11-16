@@ -133,6 +133,16 @@ variable "admin_ui_namespaces" {
   }
 }
 
+variable "storage_api_namespaces" {
+  description = "Namespaces for storage-api's dev/prd/prv environments, keyed by tofu workspace name. Internal only: never routed through the tunnel."
+  type        = map(string)
+  default = {
+    default = "storage-dev-priv"
+    prd     = "storage-prd-priv"
+    prv     = "storage-prv-priv"
+  }
+}
+
 variable "auth_api_namespaces" {
   description = "Namespaces for auth-api's dev/prd/prv environments, keyed by tofu workspace name."
   type        = map(string)
