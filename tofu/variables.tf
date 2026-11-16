@@ -137,9 +137,9 @@ variable "auth_api_namespaces" {
   description = "Namespaces for auth-api's dev/prd/prv environments, keyed by tofu workspace name."
   type        = map(string)
   default = {
-    default = "clusterkeep-dev-priv"
+    default = "auth-dev-pub"
     prd     = "auth-prd-pub"
-    prv     = "clusterkeep-prv-priv"
+    prv     = "auth-prv-pub"
   }
 }
 
