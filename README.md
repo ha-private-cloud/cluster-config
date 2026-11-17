@@ -5,7 +5,7 @@ The shared services inside the Talos cluster that every ClusterKeep app relies o
 ## What it installs
 
 - **ingress-nginx** as a DaemonSet on the host network of each worker, so it listens on ports 80 and 443 directly. There's no load balancer on bare metal.
-- **csi-driver-nfs** with a StorageClass for each NFS VM: `nfs-csi` on 192.168.0.148, which is the default, and `nfs-csi-pve3` on 192.168.0.215. The volumes use the `Retain` reclaim policy.
+- **csi-driver-nfs** with one StorageClass, `nfs-csi`, which is the default. It points at 192.168.0.148, the address of the highly available NFS pair from `proxmox-tofu`, so volumes follow whichever NFS VM is serving. The volumes use the `Retain` reclaim policy.
 - **Headlamp**, the Kubernetes dashboard, at headlamp.clusterkeep.dev.net. It signs in through auth-api, with its client settings read from `cluster-auth`'s state.
 - **Nexus** as the container registry. The web interface is at nexus.clusterkeep.dev.net and Docker images go to registry.clusterkeep.dev.net. Its Java memory is sized to fit inside the pod's limit.
 - A **CoreDNS** change so pods can reach Headlamp and the registry by their local names through ingress-nginx.

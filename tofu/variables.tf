@@ -47,7 +47,7 @@ variable "csi_driver_nfs_chart_version" {
 }
 
 variable "nfs_servers" {
-  description = "NFS servers provisioned in proxmox-tofu, each backing its own StorageClass (keyed by StorageClass name). Exactly one must be marked default. Addresses must match the live VMs."
+  description = "NFS services from proxmox-tofu, each backing its own StorageClass (keyed by StorageClass name). Exactly one must be marked default. nfs-csi uses the address Pacemaker moves to whichever NFS VM holds the DRBD primary."
   type = map(object({
     address     = string
     export_path = string
@@ -58,11 +58,6 @@ variable "nfs_servers" {
       address     = "192.168.0.148"
       export_path = "/srv/nfs/data"
       default     = true
-    }
-    "nfs-csi-pve3" = {
-      address     = "192.168.0.215"
-      export_path = "/srv/nfs/data"
-      default     = false
     }
   }
 }
