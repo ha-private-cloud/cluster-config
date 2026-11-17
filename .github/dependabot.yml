@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: opentofu
+    directory: /tofu
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: Chore
+    groups:
+      opentofu:
+        update-types:
+          - minor
+          - patch
